@@ -81,7 +81,7 @@ describe('unbox', function () {
 		});
 	});
 
-	it('should unbox generator yielded with callback', function (done) {
+	it('should unbox generator yielded with thunk', function (done) {
 		var foo = function* () {
 			return yield function (done) {
 				setTimeout(function () {
@@ -107,6 +107,22 @@ describe('unbox', function () {
 		var gen = bar();
 
 		unbox(gen, function (err, val) {
+			assert.equal(val, 1);
+			done()
+		});
+	});
+
+	it('should unbox thunk called with generator', function (done) {
+		var foo = function* () {
+			return yield 1;
+		};
+		var bar = function (done) {
+			setTimeout(function () {
+				done(null, foo());
+			}, 0)
+		};
+
+		unbox(bar, function (err, val) {
 			assert.equal(val, 1);
 			done()
 		});
@@ -185,6 +201,27 @@ describe('unbox', function () {
 		});
 	});
 
+	it('should allow generator function to catch error asynchronously', function (done) {
+		var foo = function (done) {
+			setTimeout(function () {
+				done(new Error('error'));
+			}, 0);
+		};
+		var bar = function* () {
+			try {
+				yield foo;
+			} catch (err) {
+				return 1;
+			}
+		};
+		var gen = bar();
+
+		unbox(gen, function (err, val) {
+			assert.equal(val, 1);
+			done();
+		});
+	});
+
 	it('should unbox complexly nested generator', function (done) {
 		var foo = function* () {
 			return yield 1;
@@ -202,6 +239,44 @@ describe('unbox', function () {
 
 		unbox(gen, function (err, val) {
 			assert.equal(val, 1);
+			done();
+		});
+	});
+
+	it('should unbox in parallel', function (done) {
+		var foo = function (done) {
+			setTimeout(function () {
+				done(null, 1);
+			}, 10);
+		};
+		var bar = function (done) {
+			setTimeout(function () {
+				done(null, 2);
+			}, 0);
+		};
+
+		unbox([foo, bar], { parallel: true }, function (err, val) {
+			assert.equal(val[0], 1);
+			assert.equal(val[1], 2);
+			done();
+		});
+	});
+
+	it('should stop at the first error when unboxing in parallel', function (done) {
+		var foo = function (done) {
+			setTimeout(function () {
+				done(new Error('error'));
+			}, 0);
+		};
+		var bar = function (done) {
+			setTimeout(function () {
+				done(new Error('error2'));
+			}, 10);
+		};
+
+		unbox([foo, bar], { parallel: true }, function (err, val) {
+			assert.ok(err);
+			assert.equal(err.message, 'error');
 			done();
 		});
 	});
