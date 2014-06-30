@@ -1,0 +1,21 @@
+{
+  "name": "unbox",
+  "version": "0.1.0",
+  "description": "Extract values \"boxed\" inside objects like generators, generator functions, functions of particular signature (see the API), etc. Help you write asynchronous code more elegantly. Inspired by [co](https://github.com/visionmedia/co).",
+  "main": "unbox.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha --harmony"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hgl/unbox"
+  },
+  "author": "Glen Huang <i@hgl.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hgl/unbox/issues"
+  }
+}
